@@ -1,0 +1,560 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>  
+#include <time.h>   
+#include <ctype.h>
+
+#define MAXP 1000
+
+typedef struct {
+	int control;
+	int contador;
+}tcontar;
+
+typedef struct {
+	int hora;
+	int min;
+	int seg;
+}thora;
+
+typedef struct {
+	int dia;
+	int mes;
+	int anio;
+}tfecha;
+
+typedef struct {
+	int codigo[21];
+	char nombre[40];
+	float precio;
+	int stock;
+	tfecha fechastock;
+	thora horastock;
+}tproducto;
+
+/////////////////////////////////////////////////////////////////////
+void swapprods(tproducto *p1, tproducto *p2);
+void mostrarProductos(tproducto vecP[MAXP], int * cantidadCargados);
+int altaProd(tproducto vecP[MAXP], int * cantidadCargados);
+int bajaProd(tproducto vecP[MAXP], int * cantidadCargados);
+void ordenarBurbuja(tproducto vecP[], int size);
+void escribirEnArchivo(tproducto vecP[MAXP], int * cantidadCargados);
+void leerEnArchivo();
+void mayorPrecio(tproducto vecP[], int size);
+int altaProdRandom(tproducto vecP[MAXP], int * cantidadCargados);
+float promedioPrecio(tproducto vecP[], int size);
+void mostrarPromedios(tproducto vecP[MAXP], int size, float prom);
+
+int main()
+{
+	//Seed
+	srand(time(NULL));
+	tproducto vecProductos[MAXP];
+	int prodCargados = 0;
+	int eleccion = 99;
+	float prom;
+	int res;
+
+	prom = 0;
+
+	//int resultadoAltaProd;
+	//resultadoAltaProd = altaProd(vecProductos, &prodCargados);
+	//while (resultadoAltaProd == 1 && prodCargados < MAXP)
+	//{
+	//	resultadoAltaProd = altaProd(vecProductos, &prodCargados);
+	//}
+
+	while (eleccion != 9)
+	{
+		printf(" [+] Bienvenido al programa de Programacion Avanzada en Pinamar!\n");
+		printf("\n [+] Que desea hacer?\n\n");
+		printf("0. Cargar productos de forma aleatoria\n");
+		printf("1. Cargar productos\n");
+		printf("2. Mostrar productos cargados\n");
+		printf("3. Eliminar producto\n");
+		printf("4. Mostrar ordenado por burbuja\n");
+		printf("5. Escribir en archivo\n");
+		printf("6. Leer en archivo\n");
+		printf("7. Mayor en archivo\n");
+		printf("8. Promedio de precios\n");
+		printf("10. Mostrar estadisticas de promedio\n");
+		printf("\n");
+		printf("9. Salir\n\n");
+		printf(">> ");
+		scanf("%d", &eleccion);
+		getchar();
+		system("cls");
+
+		switch (eleccion)
+		{
+		case 0:
+			printf("\n [+] Carga de productos aleatoria\n\n");
+			altaProdRandom(vecProductos, &prodCargados);
+			printf("\n  [+] Carga de productos finalizada con %d productos en total.\n\n", prodCargados);
+			system("pause");
+			printf("\n");
+			system("cls");
+			break;
+
+		case 1:
+			printf("Aviso: Presione [Enter] en nombre para finalizar la carga\n");
+
+			res = altaProd(vecProductos, &prodCargados);
+			//while (res.control == 1 && prodCargados < MAXP)
+			while (res == 1 && prodCargados < MAXP)
+			{
+				res = altaProd(vecProductos, &prodCargados);
+			}
+
+			printf("\n ! Carga de productos finalizada con %d productos en total.\n", prodCargados);
+			//printf("control: %d\n", res);
+			printf("\n");
+			system("cls");
+			break;
+
+		case 2:
+			printf("\n [+] Productos Cargados: %d\n\n", prodCargados);
+			mostrarProductos(vecProductos, &prodCargados);
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 3:
+			printf("Aviso: Presione [Enter] en nombre para finalizar la baja\n");
+
+			res = bajaProd(vecProductos, &prodCargados);
+			//while (res.control == 1 && prodCargados < MAXP)
+			while (res == 1 && prodCargados > 0)
+			{
+				res = bajaProd(vecProductos, &prodCargados);
+			}
+
+			printf("\n");
+			system("cls");
+			break;
+
+		case 4:
+			ordenarBurbuja(vecProductos, prodCargados);
+			printf("\n [+] Productos ordenados en burbuja: %d\n\n", prodCargados);
+			mostrarProductos(vecProductos, &prodCargados);
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 5:
+			escribirEnArchivo(vecProductos, &prodCargados);
+			printf("\n [+] Productos escritos en archivo:\n\n");
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 6:
+			printf("\n [+] Productos cargados en archivo: %d\n\n", prodCargados);
+			leerEnArchivo();
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 7:
+			printf("\n [+] Producto de mayor precio:\n\n");
+			mayorPrecio(vecProductos, prodCargados);
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 8:
+			printf("\n [+] Promedio de precios:\n\n");
+			prom = promedioPrecio(vecProductos, prodCargados);
+			printf("  [+] El promedio de precios es: %.2f\n", prom);
+			printf("\n");
+			system("pause");
+			system("cls");
+			break;
+
+		case 10:
+			printf("\n [+] Estadisticas de precios por promedio:\n\n");
+			if (prom == 0)
+			{
+				printf("\n [!] El promedio es nulo, ejecute primero el calculo del mismo [opcion 8]:\n\n");
+				printf("\n");
+				system("pause");
+				system("cls");
+				break;
+			}
+			else {
+				mostrarPromedios(vecProductos, prodCargados, prom);
+				printf("\n");
+				system("pause");
+				system("cls");
+				break;
+			}
+
+		case 9:
+			break;
+		}
+	}
+
+	//system("pause");
+	return 0;
+}
+
+/////////////////////////////////////////////////////////////////////
+int altaProd(tproducto vecP[MAXP], int * cantidadCargados)
+{
+	// 0 ó 1 segun salga bien o mal la carga
+	int resultadodecarga;
+	int i;
+	//tcontar cont;
+
+	tproducto p1;	//estructura para cargar el producto nuevo
+
+					//Carga del procuto
+
+					//pido el nombre del producto
+
+	printf("\nIngresar nombre del producto: ");
+	gets(p1.nombre);
+	//verifico que el nombre no este vacio
+	if (p1.nombre[0] != '\0')
+	{
+		//cargo aleatorio el codigo de barras
+		for (i = 0; i < 21; i++)
+		{
+			p1.codigo[i] = rand() % (9 - 0 + 1) + 0;
+		}
+
+		p1.stock = rand() % (10000 - 0 + 1) + 0;
+		p1.precio = (rand() % (10000 - 1000 + 1) + 1000) / 3;
+		p1.horastock.hora = rand() % (23 - 0 + 1) + 0;
+		p1.horastock.min = rand() % (59 - 0 + 1) + 0;
+		p1.horastock.seg = rand() % (59 - 0 + 1) + 0;
+
+		//printf("Ingrese fecha de stock como dd-mm-aa: ");
+		//scanf("%d-%d-%d", &p1.fechastock.dia, &p1.fechastock.mes, &p1.fechastock.anio);
+		p1.fechastock.dia = rand() % (28 - 1 + 1) + 1;
+		p1.fechastock.mes = rand() % (12 - 1 + 1) + 1;
+		p1.fechastock.anio = rand() % (2000 - 1900 + 1) + 1900;
+		//getchar(); //se usa para capturar el "enter" que apreté cuando ingrese los numeros con scanf
+
+		vecP[*cantidadCargados] = p1;
+
+		for (i = 0; i < *cantidadCargados; i++)
+		{
+			if (strcmp(vecP[i].nombre, vecP[*cantidadCargados].nombre) > 0)
+			{
+				swapprods(&vecP[i], &vecP[*cantidadCargados]);
+			}
+		}
+
+		*cantidadCargados = *cantidadCargados + 1;
+
+		resultadodecarga = 1;
+		//cont.control = 1;
+		//cont.contador++;
+	}
+	else
+	{
+		//cont.control = 0;
+		resultadodecarga = 0;
+	}
+	// fin de carga
+
+	//return cont;
+	return resultadodecarga;
+}
+
+/////////////////////////////////////////////////////////////////////
+int altaProdRandom(tproducto vecP[MAXP], int * cantidadCargados)
+{
+	int resultadodecarga;
+	int i, cant = 0, j;
+	char cad[] = "prodNro";
+
+	tproducto p1;
+	//strcpy(p1.nombre, cad);
+
+	printf("\nIngresar cantidad de productos a generar: ");
+	scanf("%d", &cant);
+
+	for (j = 0; j < cant; j++)
+	{
+		//cargo aleatorio el codigo de barras
+		for (i = 0; i < 21; i++)
+		{
+		p1.codigo[i] = rand() % (9 - 0 + 1) + 0;
+		}
+		
+		//cad[] = "(rand() % (42 - 17 + 1) + 17))";
+		strcpy(p1.nombre, cad);
+
+		p1.stock = rand() % (10000 - 0 + 1) + 0;
+		p1.precio = (rand() % (10000 - 1000 + 1) + 1000) / 3;
+		p1.horastock.hora = rand() % (23 - 0 + 1) + 0;
+		p1.horastock.min = rand() % (59 - 0 + 1) + 0;
+		p1.horastock.seg = rand() % (59 - 0 + 1) + 0;
+
+		p1.fechastock.dia = rand() % (28 - 1 + 1) + 1;
+		p1.fechastock.mes = rand() % (12 - 1 + 1) + 1;
+		p1.fechastock.anio = rand() % (2000 - 1900 + 1) + 1900;
+
+		vecP[*cantidadCargados] = p1;
+
+		//Orden alfabetico
+		for (i = 0; i < *cantidadCargados; i++)
+		{
+			if (strcmp(vecP[i].nombre, vecP[*cantidadCargados].nombre) > 0)
+			{
+				swapprods(&vecP[i], &vecP[*cantidadCargados]);
+			}
+		}
+
+		*cantidadCargados = *cantidadCargados + 1;
+		strcpy(p1.nombre, cad);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////
+void escribirEnArchivo(tproducto vecP[MAXP], int * cantidadCargados) {
+	int i;
+	FILE *arch;
+
+	arch = fopen("productos.dat", "wb");
+	if (arch == NULL) {
+		printf("No se puedo crear el archivo");
+		return 1;
+	}
+
+	for (i = 0; i < *cantidadCargados; i++)
+	{
+		fwrite(&vecP[i], sizeof(vecP[i]), 1, arch);
+	}
+
+	fclose(arch);
+}
+
+/////////////////////////////////////////////////////////////////////
+void leerEnArchivo() {
+	int i;
+	FILE *arch;
+	tproducto p1;
+
+	arch = fopen("productos.dat", "rb");
+	if (arch == NULL) {
+		printf("No se puedo crear el archivo");
+		return 1;
+	}
+
+	fread(&p1, sizeof(tproducto), 1, arch);
+	while (!feof(arch))
+	{
+		printf("Nombre: %s\n", p1.nombre);
+		printf("Codigo: %d\n", p1.codigo);
+		printf("Stock : %d\n", p1.stock);
+		printf("Precio: %.2f\n", p1.precio);
+		printf("FechaS: %d-%d-%d\n", p1.fechastock);
+		printf("Hora  : %d:%d:%d\n", p1.horastock);
+		printf("\n-------------------------------\n");
+
+		fread(&p1, sizeof(tproducto), 1, arch);
+
+	}
+
+	fclose(arch);
+}
+
+/////////////////////////////////////////////////////////////////////
+void mayorPrecio(tproducto vecP[], int size) {
+	int i;
+	int posicionMayor = 0;
+	float precioMayor;
+
+	precioMayor = vecP[0].precio;
+
+	for ( i = 0; i < size; i++)
+	{
+		if (vecP[i].precio > precioMayor)
+		{
+			precioMayor = vecP[i].precio;
+			posicionMayor = i;
+		}
+	}
+
+	printf("El precio mas alto es: %.2f\n", precioMayor);
+	printf("Correspondiente al producto: %s\n", vecP[posicionMayor].nombre);
+
+}
+
+/////////////////////////////////////////////////////////////////////
+float promedioPrecio(tproducto vecP[], int size) {
+	int i;
+	float prom = 0;
+
+	for (i = 0; i < size; i++)
+	{
+		prom = prom + vecP[i].precio;
+	}
+
+	prom = prom / size;
+	//printf("  [+] El promedio de precios es: %.2f\n", prom);
+	return prom;
+}
+
+/////////////////////////////////////////////////////////////////////
+void mostrarPromedios(tproducto vecP[MAXP], int size, float prom)
+{
+	int eleccion = 99, i, cont = 0;
+	tproducto  p1;
+
+	printf(" [+] Elija una opcion a mostar:\n\n");
+	printf("1. Productos con precio MAYOR al promedio\n");
+	printf("2. Productos con precio MENOR al promedio\n");
+	printf("\n");
+	printf(">> ");
+	scanf("%d", &eleccion);
+	getchar();
+	system("cls");
+
+	switch (eleccion)
+	{
+	case 1:
+		for ( i = 0; i < size; i++)
+		{
+			if (vecP[i].precio >= prom)
+			{
+				printf("Nombre: %s\n", vecP[i].nombre);
+				printf("Codigo: %d\n", vecP[i].codigo);
+				printf("Stock : %d\n", vecP[i].stock);
+				printf("Precio: %.2f\n", vecP[i].precio);
+				printf("FechaS: %d-%d-%d\n", vecP[i].fechastock);
+				printf("Hora  : %d:%d:%d\n", vecP[i].horastock);
+				printf("\n-------------------------------\n");
+
+				cont++;
+			}
+		}
+		printf("  [+] Se encontraron %d productos mayores al promedio (%.2f) de %d en total.\n", cont, prom, size);
+
+		break;
+
+	case 2:
+		for (i = 0; i < size; i++)
+		{
+			if (vecP[i].precio <= prom)
+			{
+				printf("Nombre: %s\n", vecP[i].nombre);
+				printf("Codigo: %d\n", vecP[i].codigo);
+				printf("Stock : %d\n", vecP[i].stock);
+				printf("Precio: %.2f\n", vecP[i].precio);
+				printf("FechaS: %d-%d-%d\n", vecP[i].fechastock);
+				printf("Hora  : %d:%d:%d\n", vecP[i].horastock);
+				printf("\n-------------------------------\n");
+
+				cont++;
+			}
+		}
+		printf("  [+] Se encontraron %d productos menores al promedio (%.2f) de %d en total.\n", cont, prom, size);
+
+		break;
+
+	default:
+		break;
+	}
+}
+
+/////////////////////////////////////////////////////////////////////
+void mostrarProductos(tproducto vecP[MAXP], int * cantidadCargados) {
+	int i;
+
+	for (i = 0; i < *cantidadCargados; i++)
+	{
+		printf("Nombre: %s\n", vecP[i].nombre);
+		printf("Codigo: %d\n", vecP[i].codigo);
+		printf("Stock : %d\n", vecP[i].stock);
+		printf("Precio: %.2f\n", vecP[i].precio);
+		printf("FechaS: %d-%d-%d\n", vecP[i].fechastock);
+		printf("Hora  : %d:%d:%d\n", vecP[i].horastock);
+		printf("\n-------------------------------\n");
+	}
+
+}
+
+/////////////////////////////////////////////////////////////////////
+void ordenarBurbuja(tproducto vecP[], int size) {
+	int i, j;
+	int ptemp;
+
+	for (i = 1; i < size; i++)
+	{
+		for (j = 0; j < size - 1; j++)
+		{
+			//printf("Stock : %d\n", vecP[i].stock);
+			//printf("\n-------------------------------\n");
+			if (vecP[j].stock >= vecP[j + 1].stock) {
+				/*ptemp = vecP[j];
+				vecP[j] = vecP[j + 1];
+				vecP[j + 1] = ptemp;*/
+				swapprods(&vecP[j], &vecP[j + 1]);
+			}
+
+		}
+	}
+
+}
+
+/////////////////////////////////////////////////////////////////////
+int bajaProd(tproducto vecP[MAXP], int * cantidadCargados) {
+	int i, j, resultadodebaja;
+	tproducto nombre;
+	tproducto ptemp;
+
+	printf("\nIngrese el nombre a borrar: ");
+	gets(nombre.nombre);
+
+	if (nombre.nombre[0] != '\0')
+	{
+
+		for (i = 0; i < *cantidadCargados; i++)
+		{
+			if (strcmp(vecP[i].nombre, nombre.nombre) == 0)
+			{
+				for (j = i; j < *cantidadCargados; j++)
+				{
+					ptemp = vecP[j];
+					vecP[j] = vecP[j + 1];
+					vecP[j + 1] = ptemp;
+					//printf("%s\n", vecP[j].nombre);
+
+				}
+				printf("  [+] El producto \"%s\" fue dado de baja.\n", nombre.nombre);
+				*cantidadCargados = *cantidadCargados - 1;
+				break;
+			}
+			else
+			{
+				printf("  [!] El producto \"%s\" no existe.\n", nombre.nombre);
+				break;
+			}
+		}
+		resultadodebaja = 1;
+	}
+	else
+	{
+		resultadodebaja = 0;
+	}
+
+	return resultadodebaja;
+}
+
+/////////////////////////////////////////////////////////////////////
+void swapprods(tproducto *p1, tproducto *p2)
+{
+	tproducto ptemp;
+	ptemp = *p1;
+	*p1 = *p2;
+	*p2 = ptemp;
+}
