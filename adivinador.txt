@@ -1,0 +1,208 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>  
+#include <time.h>   
+#include <ctype.h>
+
+#define MAXP 1000
+
+typedef struct {
+	int lu;
+	char nombre[60];
+	char apellido[60];
+	int nota;
+}talumno;
+
+void generarAluBin(talumno vecP[], int * cantidadCargados);
+void swapprods(talumno *p1, talumno *p2);
+void escribirEnArchivo(talumno vecP[MAXP], int * cantidadCargados);
+void notas(talumno vecP[MAXP], int * cantidadCargados);
+void leerArch(talumno vecP[MAXP], int * cantidadCargados);
+int main() {
+	//Seed
+	srand(time(NULL));
+	talumno p1;
+	int aluCargados = 0;
+	int eleccion = 99;
+	float prom;
+	int res;
+
+
+
+	while (1)
+	{	
+		puts("         _...._");
+		puts("       .`      `.");
+		puts("      / ***      \\         The Crystal Ball");
+		puts("     : **         :         says.........");
+		puts("     :            :        You don't really");
+		puts("      \\          /       believe in fortunes,");
+		puts("       `-.,,,,.-'              do you?");
+		puts("        _(    )_");
+		puts("       )        (");
+		puts("      (          )");
+		puts("       `-......-`lc");
+
+		printf("\n [+] Bienvenido al adivinador de notas - Programacion Avanzada en Pinamar!\n");
+		printf("([Enter] para salir)\n\n");
+		printf("\nIngrese su nombre: ");
+		gets(p1.nombre);
+
+		if (p1.nombre[0] == '\0')
+		{
+			printf("\n [+] Adios! Y que la fortuna te acompanie...\n\n");
+			break;
+		}
+
+		printf("\nIngrese su apellido: ");
+		gets(p1.apellido);
+
+		printf("\nIngrese su L.U.: ");
+		scanf("%d", &p1.lu);
+    
+    //Aca hardcodeas tu numero de legajo para que salga 10
+		if (p1.lu == 1100018)
+		{
+			p1.nota = 10;
+		}
+		else
+		{
+			p1.nota = rand() % (10 - 4 + 1) + 4;
+		}
+
+		printf("\n -----------------------------------------------------------------\n");
+		printf("|| [+] %s %s, legajo %d, tu nota es: [%d]\n", p1.nombre, p1.apellido, p1.lu, p1.nota);
+		printf(" -------------------------------------------------------------------\n");
+
+		printf("\n");
+		
+		system("pause");
+		getchar();
+		system("cls");
+
+	}
+
+	system("pause");
+	return 0;
+}
+
+/////////////////////////////////////////////////////////////////////
+void generarAluBin(talumno vecP[MAXP], int * aluCargados) {
+	int i, cant = 0, j;
+	talumno p1;
+
+	for ( i = 0; i < 10; i++)
+	{
+		printf("\nIngresar nombre del alumno: ");
+		gets(p1.nombre);
+
+		printf("\nIngresar apellido del alumno: ");
+		gets(p1.apellido);
+
+		printf("\nIngresar LU del alumno: ");
+		scanf("%d", &p1.lu);
+		getchar();
+
+		p1.nota = rand() % (10 - 4 + 1) + 4;
+
+		printf("%s\n", p1.nombre);
+		printf("%s\n", p1.apellido);
+		printf("%d\n", p1.lu);
+		printf("%d\n", p1.nota);
+
+		vecP[*aluCargados] = p1;
+		*aluCargados = *aluCargados + 1;
+	}
+
+
+	//Orden alfabetico
+	for (i = 0; i < *aluCargados; i++)
+	{
+		if (strcmp(vecP[i].nombre, vecP[*aluCargados].nombre) > 0)
+		{
+			swapprods(&vecP[i], &vecP[*aluCargados]);
+		}
+	}
+
+	escribirEnArchivo(vecP, &aluCargados);
+
+}
+
+/////////////////////////////////////////////////////////////////////
+void escribirEnArchivo(talumno vecP[MAXP], int * cantidadCargados) {
+	int i;
+	FILE *arch;
+
+	arch = fopen("alumnos.dat", "wb");
+	if (arch == NULL) {
+		printf("No se puedo crear el archivo");
+		return 1;
+	}
+
+	for (i = 0; i < *cantidadCargados; i++)
+	{
+		fwrite(&vecP[i], sizeof(vecP[i]), 1, arch);
+	}
+
+	fclose(arch);
+}
+
+/////////////////////////////////////////////////////////////////////
+void notas(talumno vecP[MAXP], int * cantidadCargados) {
+	int i;
+	FILE *arch;
+	talumno p1;
+
+	arch = fopen("alumnos.dat", "wb");
+	if (arch == NULL) {
+		printf("No se puedo crear el archivo");
+		return 1;
+	}
+
+	for (i = 0; i < *cantidadCargados; i++)
+	{
+		p1.nota = rand() % (10 - 4 + 1) + 4;
+		vecP[i].nota = p1.nota;
+
+		fwrite(&vecP[i], sizeof(vecP[i]), 1, arch);
+	}
+
+	fclose(arch);
+}
+
+/////////////////////////////////////////////////////////////////////
+void leerArch(talumno vecP[MAXP], int * cantidadCargados) {
+	int i;
+	FILE *arch;
+	talumno p1;
+
+	arch = fopen("alumnos.dat", "rb");
+	if (arch == NULL) {
+		printf("No se puedo crear el archivo");
+		return 1;
+	}
+
+	fread(&p1, sizeof(talumno), 1, arch);
+	while (!feof(arch))
+	{
+		printf("Nombre  : %s\n", p1.nombre);
+		printf("Apellido: %d\n", p1.apellido);
+		printf("LU      : %d\n", p1.lu);
+		printf("Nota    : %d\n", p1.nota);
+		printf("\n-------------------------------\n");
+
+		fread(&p1, sizeof(talumno), 1, arch);
+
+	}
+
+	fclose(arch);
+}
+
+/////////////////////////////////////////////////////////////////////
+void swapprods(talumno *p1, talumno *p2)
+{
+	talumno ptemp;
+	ptemp = *p1;
+	*p1 = *p2;
+	*p2 = ptemp;
+}
