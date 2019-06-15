@@ -1,0 +1,279 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>  
+#include <time.h>   
+#include <ctype.h>
+
+#define MAXP 1000
+
+typedef struct {
+	int legajo;
+	char apellido[10];
+	int horas;
+	float sueldobasico;
+}tchofer;
+
+///////////////////////////////////////////////////
+int cargaDatos(FILE *f, int *cantidadCargados);
+void swapprods(tchofer *p1, tchofer *p2);
+void mostrarDatos(int *cantidadCargados);
+int consultaSueldo(int *leg, int *cantidadCargados);
+tchofer leerregistro(FILE * f, int numreg);
+void grabarregistro(FILE * f, int numreg, tchofer dato);
+void generarInforme();
+
+int main(){
+	int eleccion = 99, cargados = 0, res, leg, i, j, cantreg;
+	tchofer cho1, cho2;
+	FILE * arch;
+
+	//Seed
+	srand(time(NULL));
+
+	while (eleccion != 9)
+	{
+		printf(" [+] Bienvenido al programa de Programacion Avanzada en Pinamar!\n");
+		printf("\n [+] Que desea hacer?\n\n");
+		printf("1. Cargar choferes\n");
+		printf("2. Mostrar choferes\n");
+		printf("3. Consultar sueldo\n");
+		printf("4. Generar reporte\n");
+		printf("\n");
+		printf("9. Salir\n\n");
+		printf(">> ");
+		scanf("%d", &eleccion);
+		getchar();
+		system("cls");
+
+		switch (eleccion)
+		{
+		case 1:
+			printf("\n [+] Carga de choferes manual\n\n");
+			cargados = 0;
+			arch = fopen("choferes.dat", "wb");
+			if (arch == NULL) {
+				puts("Error");
+				system("pause");
+				return 1;
+			}
+
+			res = cargaDatos(arch, &cargados);
+			while (res == 1 && cargados < MAXP)
+			{
+				res = cargaDatos(arch, &cargados);
+			}
+			fclose(arch);
+
+			arch = fopen("choferes.dat", "rb+");
+			if (arch == NULL) {
+				puts("Error");
+				system("pause");
+				return 1;
+			}
+
+			//Burbuja para ordenar por sueldo base
+			fseek(arch, 0, SEEK_END);	//ubico indicador al final
+			cantreg = ftell(arch) / sizeof(tchofer);   //obtengo cantidad de reg.
+			//printf("%d", cantreg);   Descomentar en caso de querer ver si calcula bien los registros
+
+			for (i = 0; i < cantreg - 1; i++)
+			{
+				for (j = i + 1; j < cantreg; j++)
+				{
+					cho1 = leerregistro(arch, i);
+					cho2 = leerregistro(arch, j);
+					if (cho1.sueldobasico > cho2.sueldobasico) {
+						grabarregistro(arch, j, cho1);
+						grabarregistro(arch, i, cho2);
+					}
+				}
+			}
+			fclose(arch);
+
+			printf("\n  [+] Carga de choferes finalizada con %d choferes en total.\n\n", cargados);
+			system("pause");
+			printf("\n");
+			system("cls");
+			break;
+		case 2:
+			printf("\n [+] Choferes cargados: \n\n");
+			mostrarDatos(&cargados);
+			system("pause");
+			printf("\n");
+			system("cls");
+			break;
+		case 3:
+			printf("\n [+] Consulta de sueldo: \n\n");
+			printf("Ingrese nro de legajo: ");
+			scanf("%d", &leg);
+			fgetc(stdin);
+			res = consultaSueldo(&leg, &cargados);
+			if (res == 0)
+			{
+				printf("\n  [!] El nro de legajo no existe\n\n");
+			}
+			system("pause");
+			printf("\n");
+			system("cls");
+			break;
+
+		case 4:
+			printf("\n [+] Generando reporte: \n\n");
+			generarInforme();
+			printf("\n  [+] Reporte generado!\n\n");
+			system("pause");
+			printf("\n");
+			system("cls");
+			break;
+
+		case 9:
+			break;
+		}
+	}
+}
+///////////////////////////////////////////////////
+int consultaSueldo(int *leg, int *cantidadCargados) {
+	int i, res;
+	tchofer c1;
+	FILE * arch;
+	arch = fopen("choferes.dat", "rb+");
+	if (arch == NULL) {
+		puts("Error");
+		system("pause");
+		return 1;
+	}
+
+	res = 0;
+	printf("Legajo\tApellido\tHoras\tSueldo\n");
+	fread(&c1, sizeof(tchofer), 1, arch);
+	while (!feof(arch))
+	{
+		if (*leg == c1.legajo)
+		{
+			c1.sueldobasico = c1.sueldobasico + (c1.horas*100);
+			printf("%d\t%s\t\t%d\t%.2f\n", c1.legajo, c1.apellido, c1.horas, c1.sueldobasico);
+			res = 1;
+		}
+		fread(&c1, sizeof(tchofer), 1, arch);
+	}
+
+	fclose(arch);
+	return res;
+}
+
+///////////////////////////////////////////////////
+tchofer leerregistro(FILE * f, int numreg) {
+	tchofer dato;
+	fseek(f, numreg * sizeof(tchofer), SEEK_SET);
+	fread(&dato, sizeof(dato), 1, f);
+	return dato;
+}
+
+///////////////////////////////////////////////////
+void grabarregistro(FILE * f, int numreg, tchofer dato) {
+	fseek(f, numreg * sizeof(tchofer), SEEK_SET);
+	fwrite(&dato, sizeof(dato), 1, f);
+}
+
+///////////////////////////////////////////////////
+void generarInforme() {
+	int i, res;
+	tchofer c1;
+	//char cad[100];
+	FILE * arch, *salida;
+	arch = fopen("choferes.dat", "rb+");
+	if (arch == NULL) {
+		puts("Error");
+		system("pause");
+		return 1;
+	}
+
+	salida = fopen("reporte.txt", "wt");
+	if (salida == NULL) {
+		puts("Error");
+		return 1;
+	}
+
+	res = 0;
+	fread(&c1, sizeof(tchofer), 1, arch);
+	fputs("Legajo\tApellido\tHoras\tSueldo\n", salida);
+	fputs("-----------------------------------------\n", salida);
+	while (!feof(arch))
+	{
+		fprintf(salida, "%d\t%s\t\t%d\t%.2f\n", c1.legajo, c1.apellido, c1.horas, c1.sueldobasico);
+		fread(&c1, sizeof(tchofer), 1, arch);
+	}
+
+	fclose(arch);
+	fclose(salida);
+	return res;
+}
+
+///////////////////////////////////////////////////
+int cargaDatos(FILE *f, int *cantidadCargados) {
+	// 0 ó 1 segun salga bien o mal la carga
+	int resultadodecarga;
+	int i;
+
+	tchofer c1;
+
+	printf("\nIngresar apellido del chofer: ");
+	gets(c1.apellido);
+	//verifico que el nombre no este vacio
+	if (c1.apellido[0] != '\0')
+	{
+
+		c1.sueldobasico = rand() % (30000 - 10000 + 1) + 10000;
+
+		printf("\nIngresar legajo del chofer: ");
+		scanf("%d", &c1.legajo);
+		fgetc(stdin);
+
+		printf("\nIngresar horas conducidas: ");
+		scanf("%d", &c1.horas);
+		fgetc(stdin);
+
+		fwrite(&c1, sizeof(c1), 1, f);
+
+		*cantidadCargados = *cantidadCargados + 1;
+
+		resultadodecarga = 1;
+	}
+	else
+	{
+		resultadodecarga = 0;
+	}
+	// fin de carga
+	return resultadodecarga;
+}
+
+///////////////////////////////////////////////////
+void mostrarDatos(int *cantidadCargados) {
+	tchofer c1;
+	int i, j;
+	FILE * arch;
+	arch = fopen("choferes.dat", "rb");
+	if (arch == NULL) {
+		puts("Error");
+		system("pause");
+		return 1;
+	}
+
+	printf("Legajo\tApellido\tHoras\tSueldo\n");
+	fread(&c1, sizeof(c1), 1, arch);
+	while (!feof(arch))
+	{	
+		printf("%d\t%s\t\t%d\t%.2f\n", c1.legajo, c1.apellido, c1.horas, c1.sueldobasico);
+		fread(&c1, sizeof(c1), 1, arch);
+	}
+	fclose(arch);
+}
+
+///////////////////////////////////////////////////
+void swapprods(tchofer *p1, tchofer *p2)
+{
+	tchofer ptemp;
+	ptemp = *p1;
+	*p1 = *p2;
+	*p2 = ptemp;
+}
